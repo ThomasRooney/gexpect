@@ -15,7 +15,7 @@ type ExpectSubprocess struct {
 	stdin  *io.WriteCloser
 }
 
-func spawnAtDirectory(command string, directory string) (*ExpectSubprocess, error) {
+func SpawnAtDirectory(command string, directory string) (*ExpectSubprocess, error) {
 	expect, err := _spawn(command)
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func spawnAtDirectory(command string, directory string) (*ExpectSubprocess, erro
 	return _start(expect)
 }
 
-func spawn(command string) (*ExpectSubprocess, error) {
+func Spawn(command string) (*ExpectSubprocess, error) {
 	expect, err := _spawn(command)
 	if err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ func spawn(command string) (*ExpectSubprocess, error) {
 	return _start(expect)
 }
 
-func (expect *ExpectSubprocess) expect(searchString string) error {
+func (expect *ExpectSubprocess) Expect(searchString string) error {
 
 	chunk := make([]byte, len(searchString))
 	found := 0
@@ -58,18 +58,18 @@ func (expect *ExpectSubprocess) expect(searchString string) error {
 	}
 }
 
-func (expect *ExpectSubprocess) sendline(command string) error {
+func (expect *ExpectSubprocess) Sendline(command string) error {
 	_, err := io.WriteString(*expect.stdin, command+"\r\n")
 	return err
 }
 
-func (expect *ExpectSubprocess) interact() {
+func (expect *ExpectSubprocess) Interact() {
 	defer expect.cmd.Wait()
 	go io.Copy(os.Stdout, expect.output)
 	go io.Copy(*expect.stdin, os.Stdin)
 }
 
-func (expect *ExpectSubprocess) readLine() (string, error) {
+func (expect *ExpectSubprocess) ReadLine() (string, error) {
 	str, err := expect.output.ReadString('\n')
 	if err != nil {
 		return "", err

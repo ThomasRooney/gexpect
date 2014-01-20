@@ -15,38 +15,31 @@ func TestSpawn(*testing.T) {
 }
 
 func TestInteract(*testing.T) {
-	child, err := spawn("/usr/bin/env python")
-	if err != nil {
-		panic(err)
-	}
 
-	// child.expect(">>>")
-
-	child.interact()
 }
 
 func ExampleFTP() {
-	child, err := spawn("ftp ftp.openbsd.org")
+	child, err := Spawn("ftp ftp.openbsd.org")
 	if err != nil {
 		panic(err)
 	}
-	child.expect("(?i)name .*: ")
-	child.sendline("anonymous")
-	child.expect("(?i)password")
-	child.sendline("pexpect@sourceforge.net")
-	child.expect("ftp> ")
-	child.sendline("cd /pub/OpenBSD/3.7/packages/i386")
-	child.expect("ftp> ")
-	child.sendline("bin")
-	child.expect("ftp> ")
-	child.sendline("prompt")
-	child.expect("ftp> ")
-	child.sendline("pwd")
-	child.expect("ftp> ")
+	child.Expect("(?i)name .*: ")
+	child.Sendline("anonymous")
+	child.Expect("(?i)password")
+	child.Sendline("pexpect@sourceforge.net")
+	child.Expect("ftp> ")
+	child.Sendline("cd /pub/OpenBSD/3.7/packages/i386")
+	child.Expect("ftp> ")
+	child.Sendline("bin")
+	child.Expect("ftp> ")
+	child.Sendline("prompt")
+	child.Expect("ftp> ")
+	child.Sendline("pwd")
+	child.Expect("ftp> ")
 	print("Escape character is '^]'.\n")
 	// sys.stdout.write(child.after)
 	// sys.stdout.flush()
-	child.interact()
+	child.Interact()
 }
 
 func main() {
