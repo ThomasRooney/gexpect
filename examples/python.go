@@ -11,8 +11,12 @@ func main() {
 	}
 	fmt.Printf("Expecting >>>.. \n")
 	child.Expect(">>>")
+	fmt.Printf("print 'Hello World'..\n")
+	child.Sendline("print 'Hello World'")
+	child.Expect(">>>")
 
 	fmt.Printf("Interacting.. \n")
 	child.Interact()
 	fmt.Printf("Done \n")
+	child.Close()
 }
