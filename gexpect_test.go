@@ -1,31 +1,25 @@
 package gexpect
 
 import (
-	"fmt"
 	"testing"
 )
 
-func ExampleHelloWorld() {
-
-	fmt.Println("hello")
-	// Output: hello
+func TestHelloWorld(*testing.T) {
+	child, err := Spawn("echo \"Hello World\"")
+	if err != nil {
+		panic(err)
+	}
+	child.Expect("Hello World")
 }
 
-func TestSpawn(*testing.T) {
-}
-
-func TestInteract(*testing.T) {
-
-}
-
-func ExampleFTP() {
+func TestExpectFtp(*testing.T) {
 	child, err := Spawn("ftp ftp.openbsd.org")
 	if err != nil {
 		panic(err)
 	}
-	child.Expect("(?i)name .*: ")
+	child.Expect("Name")
 	child.Sendline("anonymous")
-	child.Expect("(?i)password")
+	child.Expect("Password")
 	child.Sendline("pexpect@sourceforge.net")
 	child.Expect("ftp> ")
 	child.Sendline("cd /pub/OpenBSD/3.7/packages/i386")
@@ -36,12 +30,12 @@ func ExampleFTP() {
 	child.Expect("ftp> ")
 	child.Sendline("pwd")
 	child.Expect("ftp> ")
-	print("Escape character is '^]'.\n")
-	// sys.stdout.write(child.after)
-	// sys.stdout.flush()
-	child.Interact()
 }
 
-func main() {
-	ExampleFTP()
+func TestInteractPing(*testing.T) {
+	child, err := Spawn("ping -c8 8.8.8.8")
+	if err != nil {
+		panic(err)
+	}
+	child.Interact()
 }
