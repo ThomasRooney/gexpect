@@ -4,7 +4,7 @@ Gexpect is a pure golang expect-like module.
 
 It makes it simple and safe to control other terminal applications.  
 
-pexpect-like syntax for golang
+It provides pexpect-like syntax for golang
 
 	child, err := gexpect.Spawn("python")
 	if err != nil {
