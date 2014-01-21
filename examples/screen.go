@@ -9,10 +9,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Expecting @.. \n")
-	child.Expect("@")
-
-	fmt.Printf("Interacting.. \n")
-	child.Interact()
-	fmt.Printf("Done \n")
+	ch := child.AsyncInteractBiChannel()
+	ch <- "echo Hello World"
+	ch <- "echo Hello World"
+	ch <- "echo Hello World"
 }

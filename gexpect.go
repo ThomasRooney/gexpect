@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"regexp"
 )
 
 type ExpectSubprocess struct {
@@ -32,26 +33,46 @@ func Spawn(command string) (*ExpectSubprocess, error) {
 	return _start(expect)
 }
 
+func (expect *ExpectSubprocess) Close() error {
+	return expect.cmd.Process.Kill()
+}
+
 func (expect *ExpectSubprocess) AsyncInteractBiChannel() chan string {
+
 	ch := make(chan string)
 	readChan := make(chan string)
 
 	go func() {
+		defer func() {
+			r := recover()
+			if r != nil {
+				ch <- fmt.Sprintf("Unknown error: %+#v", r)
+			}
+		}()
 		for {
 			str, err := expect.ReadLine()
 			if err != nil {
 				close(readChan)
 				return
 			}
-			ch <- str
+			readChan <- str
 		}
 	}()
 
 	go func() {
+		defer func() {
+			r := recover()
+			if r != nil {
+				ch <- fmt.Sprintf("Unknown error: %+#v", r)
+			}
+		}()
 		for {
 			select {
-			case sendCommand := <-ch:
+			case sendCommand, exists := <-ch:
 				{
+					if !exists {
+						return
+					}
 					err := expect.Sendline(sendCommand)
 					if err != nil {
 						close(ch)
@@ -73,8 +94,46 @@ func (expect *ExpectSubprocess) AsyncInteractBiChannel() chan string {
 	return ch
 }
 
-func (expect *ExpectSubprocess) Expect(searchString string) error {
-	// fmt.Printf("Expect: %s\n", searchString)
+func (expect *ExpectSubprocess) ExpectRegex(regexSearchString string) (e error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			e = errors.New(fmt.Sprintf("Unknown error: %+#v", r))
+		}
+	}()
+	var size = len(regexSearchString)
+
+	if size < 255 {
+		size = 255
+	}
+
+	chunk := make([]byte, size)
+
+	for {
+		n, err := expect.f.Read(chunk)
+
+		if err != nil {
+			return err
+		}
+
+		// fmt.Printf("%d: %s\n", n, string(chunk))
+		success, err := regexp.Match(regexSearchString, chunk[:n])
+		if err != nil {
+			return err
+		}
+		if success {
+			return nil
+		}
+	}
+}
+
+func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			e = errors.New(fmt.Sprintf("Unknown error: %+#v", r))
+		}
+	}()
 	chunk := make([]byte, len(searchString))
 	found := 0
 	target := len(searchString)
@@ -86,7 +145,6 @@ func (expect *ExpectSubprocess) Expect(searchString string) error {
 			return err
 		}
 
-		fmt.Printf("%d: %s\n", n, string(chunk))
 		for i := 0; i < n; i++ {
 			if chunk[i] == searchString[found] {
 				found++
@@ -94,6 +152,10 @@ func (expect *ExpectSubprocess) Expect(searchString string) error {
 					return nil
 				}
 			} else {
+				if found > 0 {
+					// TODO: Calculate jump value
+					i = i - found + 1
+				}
 				found = 0
 			}
 		}
