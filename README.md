@@ -19,7 +19,7 @@ It's fast, with its 'expect' function working off a variant of Knuth-Morris-Prat
 
 It also provides interface functions that make it much simpler to work with subprocesses
 
-	child.Spawn("/bin/sh -c 'echo \"my complicated command\" | tee log | cat > log2")
+	child.Spawn("/bin/sh -c 'echo \"my complicated command\" | tee log | cat > log2'")
 
 	child.ReadLine() // ReadLine() (string, error)
 
