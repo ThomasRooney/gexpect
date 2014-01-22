@@ -2,7 +2,6 @@ package gexpect
 
 import (
 	"errors"
-	"fmt"
 	shell "github.com/kballard/go-shellquote"
 	"github.com/kr/pty"
 	"io"
@@ -43,12 +42,6 @@ func (expect *ExpectSubprocess) AsyncInteractBiChannel() chan string {
 	readChan := make(chan string)
 
 	go func() {
-		defer func() {
-			r := recover()
-			if r != nil {
-				ch <- fmt.Sprintf("Unknown error: %+#v", r)
-			}
-		}()
 		for {
 			str, err := expect.ReadLine()
 			if err != nil {
@@ -60,12 +53,6 @@ func (expect *ExpectSubprocess) AsyncInteractBiChannel() chan string {
 	}()
 
 	go func() {
-		defer func() {
-			r := recover()
-			if r != nil {
-				ch <- fmt.Sprintf("Unknown error: %+#v", r)
-			}
-		}()
 		for {
 			select {
 			case sendCommand, exists := <-ch:
@@ -95,12 +82,6 @@ func (expect *ExpectSubprocess) AsyncInteractBiChannel() chan string {
 }
 
 func (expect *ExpectSubprocess) ExpectRegex(regexSearchString string) (e error) {
-	defer func() {
-		r := recover()
-		if r != nil {
-			e = errors.New(fmt.Sprintf("Unknown error: %+#v", r))
-		}
-	}()
 	var size = len(regexSearchString)
 
 	if size < 255 {
@@ -127,36 +108,64 @@ func (expect *ExpectSubprocess) ExpectRegex(regexSearchString string) (e error) 
 	}
 }
 
-func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
-	defer func() {
-		r := recover()
-		if r != nil {
-			e = errors.New(fmt.Sprintf("Unknown error: %+#v", r))
-		}
-	}()
-	chunk := make([]byte, len(searchString))
-	found := 0
-	target := len(searchString)
-	for {
+func buildKMPTable(searchString string) []int {
+	pos := 2
+	cnd := 0
+	length := len(searchString)
 
+	var table []int
+	if length < 2 {
+		length = 2
+	}
+
+	table = make([]int, length)
+	table[0] = -1
+	table[1] = 0
+
+	for pos < len(searchString) {
+		if searchString[pos-1] == searchString[cnd] {
+			cnd += 1
+			table[pos] = cnd
+			pos += 1
+		} else if cnd > 0 {
+			cnd = table[cnd]
+		} else {
+			table[pos] = 0
+			pos += 1
+		}
+	}
+	return table
+}
+
+func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
+	chunk := make([]byte, len(searchString)*2)
+	target := len(searchString)
+	m := 0
+	i := 0
+	// Build KMP Table
+	table := buildKMPTable(searchString)
+
+	for {
 		n, err := expect.f.Read(chunk)
 
 		if err != nil {
 			return err
 		}
-
-		for i := 0; i < n; i++ {
-			if chunk[i] == searchString[found] {
-				found++
-				if found == target {
+		offset := m + i
+		for m+i-offset < n {
+			// fmt.Printf("m=%d, i=%d, offset=%d, table[i]=%d \n", m, i, offset, table[i])
+			if searchString[i] == chunk[m+i-offset] {
+				i += 1
+				if i == target {
 					return nil
 				}
 			} else {
-				if found > 0 {
-					// TODO: Calculate jump value
-					i = i - found + 1
+				m += i - table[i]
+				if table[i] > -1 {
+					i = table[i]
+				} else {
+					i = 0
 				}
-				found = 0
 			}
 		}
 	}
