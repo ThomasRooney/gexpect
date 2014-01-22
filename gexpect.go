@@ -172,6 +172,11 @@ func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
 	}
 }
 
+func (expect *ExpectSubprocess) Send(command string) error {
+	_, err := io.WriteString(expect.f, command)
+	return err
+}
+
 func (expect *ExpectSubprocess) Sendline(command string) error {
 	_, err := io.WriteString(expect.f, command+"\r\n")
 	return err
