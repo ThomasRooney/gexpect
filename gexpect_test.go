@@ -12,8 +12,25 @@ func TestHelloWorld(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	child.Expect("Hello World")
+	err = child.Expect("Hello World")
+	if err != nil {
+		panic(err)
+	}
 	log.Printf("Success\n")
+}
+
+func TestHelloWorldFailureCase(*testing.T) {
+	log.Printf("Testing Hello World Failure case... ")
+	child, err := Spawn("echo \"Hello World\"")
+	if err != nil {
+		panic(err)
+	}
+	err = child.Expect("YOU WILL NEVER FIND ME")
+	if err != nil {
+		log.Printf("Success\n")
+		return
+	}
+	panic("Expected an error for TestHelloWorldFailureCase")
 }
 
 func TestBiChannel(*testing.T) {
