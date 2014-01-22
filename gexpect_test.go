@@ -39,10 +39,10 @@ func TestBiChannel(*testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	ch := child.AsyncInteractBiChannel()
+	sender, reciever := child.AsyncInteractChannels()
 	wait := func(str string) {
 		for {
-			msg, open := <-ch
+			msg, open := <-reciever
 			if !open {
 				return
 			}
@@ -51,11 +51,12 @@ func TestBiChannel(*testing.T) {
 			}
 		}
 	}
-	ch <- "echo Hello World"
+	sender <- ""
+	sender <- "echo Hello World"
 	wait("Hello World")
-	ch <- "times"
+	sender <- "times"
 	wait("s")
-	ch <- "^D"
+	sender <- "^D"
 	log.Printf("Success\n")
 
 }

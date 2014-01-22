@@ -36,49 +36,40 @@ func (expect *ExpectSubprocess) Close() error {
 	return expect.cmd.Process.Kill()
 }
 
-func (expect *ExpectSubprocess) AsyncInteractBiChannel() chan string {
-
-	ch := make(chan string)
-	readChan := make(chan string)
+func (expect *ExpectSubprocess) AsyncInteractChannels() (send chan string, receive chan string) {
+	receive = make(chan string)
+	send = make(chan string)
 
 	go func() {
 		for {
 			str, err := expect.ReadLine()
 			if err != nil {
-				close(readChan)
+				close(receive)
 				return
 			}
-			readChan <- str
+			receive <- str
 		}
 	}()
 
 	go func() {
 		for {
 			select {
-			case sendCommand, exists := <-ch:
+			case sendCommand, exists := <-send:
 				{
 					if !exists {
 						return
 					}
 					err := expect.Sendline(sendCommand)
 					if err != nil {
-						close(ch)
+						receive <- "gexpect Error: " + err.Error()
 						return
 					}
-				}
-			case output, exists := <-readChan:
-				{
-					if !exists {
-						close(ch)
-						return
-					}
-					ch <- output
 				}
 			}
 		}
 	}()
 
-	return ch
+	return
 }
 
 // This quite possibly won't work as we're operating on an incomplete stream. It might work if all the input is within one
