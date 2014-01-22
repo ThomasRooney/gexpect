@@ -81,6 +81,10 @@ func (expect *ExpectSubprocess) AsyncInteractBiChannel() chan string {
 	return ch
 }
 
+// This quite possibly won't work as we're operating on an incomplete stream. It might work if all the input is within one
+// Flush, but that can't be relied upon. I need to find a nice, safe way to apply a regex to a stream of partial content, given we
+// don't not knowing how long our input is, and thus can't buffer it. Until that point, please just use Expect, or use the channel
+// to parse the stream yourself.
 func (expect *ExpectSubprocess) ExpectRegex(regexSearchString string) (e error) {
 	var size = len(regexSearchString)
 
@@ -96,8 +100,6 @@ func (expect *ExpectSubprocess) ExpectRegex(regexSearchString string) (e error) 
 		if err != nil {
 			return err
 		}
-
-		// fmt.Printf("%d: %s\n", n, string(chunk))
 		success, err := regexp.Match(regexSearchString, chunk[:n])
 		if err != nil {
 			return err
@@ -153,7 +155,6 @@ func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
 		}
 		offset := m + i
 		for m+i-offset < n {
-			// fmt.Printf("m=%d, i=%d, offset=%d, table[i]=%d \n", m, i, offset, table[i])
 			if searchString[i] == chunk[m+i-offset] {
 				i += 1
 				if i == target {
@@ -178,7 +179,6 @@ func (expect *ExpectSubprocess) Sendline(command string) error {
 
 func (expect *ExpectSubprocess) Interact() {
 	defer expect.cmd.Wait()
-	// go io.Copy(os.Stdout, os.Stdin)
 	go io.Copy(os.Stdout, expect.f)
 	go io.Copy(os.Stderr, expect.f)
 	go io.Copy(expect.f, os.Stdin)
@@ -245,10 +245,6 @@ func _spawn(command string) (*ExpectSubprocess, error) {
 	} else {
 		wrapper.cmd = exec.Command(path)
 	}
-
-	// wrapper.cmd.SysProcAttr.
-	// wrapper.cmd.Stdout = wrapper.cmd.Stderr
-	// go io.Copy(os.Stdout, stdout)
 
 	return wrapper, nil
 }
