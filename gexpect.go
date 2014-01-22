@@ -72,7 +72,7 @@ func (expect *ExpectSubprocess) AsyncInteractChannels() (send chan string, recei
 					if !exists {
 						return
 					}
-					err := expect.Sendline(sendCommand)
+					err := expect.SendLine(sendCommand)
 					if err != nil {
 						receive <- "gexpect Error: " + err.Error()
 						return
@@ -181,7 +181,7 @@ func (expect *ExpectSubprocess) Send(command string) error {
 	return err
 }
 
-func (expect *ExpectSubprocess) Sendline(command string) error {
+func (expect *ExpectSubprocess) SendLine(command string) error {
 	_, err := io.WriteString(expect.f, command+"\r\n")
 	return err
 }

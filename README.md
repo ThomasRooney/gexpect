@@ -11,7 +11,7 @@ It provides pexpect-like syntax for golang
 		panic(err)
 	}
 	child.Expect(">>>")
-	child.Sendline("print 'Hello World'")
+	child.SendLine("print 'Hello World'")
 	child.Interact()
 	child.Close()
 
@@ -25,7 +25,7 @@ It also provides interface functions that make it much simpler to work with subp
 
 	child.ReadUntil(' ') // ReadUntil(delim byte) ([]byte, error)
 
-	child.Sendline("/bin/sh -c 'echo Hello World | tee foo'") //  Sendline(command string) (error)
+	child.SendLine("/bin/sh -c 'echo Hello World | tee foo'") //  SendLine(command string) (error)
 
 	sender, reciever := child.AsyncInteractChannels() // AsyncInteractChannels() (chan string, chan string)
 	sender <- "echo Hello World" // Send the line to stdin
