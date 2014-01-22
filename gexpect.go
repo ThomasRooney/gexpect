@@ -24,6 +24,19 @@ func SpawnAtDirectory(command string, directory string) (*ExpectSubprocess, erro
 	return _start(expect)
 }
 
+func Command(command string) (*ExpectSubprocess, error) {
+	expect, err := _spawn(command)
+	if err != nil {
+		return nil, err
+	}
+	return expect, nil
+}
+
+func (expect *ExpectSubprocess) Start() error {
+	_, err := _start(expect)
+	return err
+}
+
 func Spawn(command string) (*ExpectSubprocess, error) {
 	expect, err := _spawn(command)
 	if err != nil {

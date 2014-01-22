@@ -73,6 +73,19 @@ func TestExpectRegex(*testing.T) {
 
 }
 
+func TestCommandStart(*testing.T) {
+	log.Printf("Testing Command... ")
+
+	// Doing this allows you to modify the cmd struct prior to execution, for example to add environment variables
+	child, err := Command("echo 'Hello World'")
+	if err != nil {
+		panic(err)
+	}
+	child.Start()
+	child.Expect("Hello World")
+	log.Printf("Success\n")
+}
+
 func TestExpectFtp(*testing.T) {
 	log.Printf("Testing Ftp... ")
 
@@ -94,7 +107,6 @@ func TestExpectFtp(*testing.T) {
 	child.Sendline("pwd")
 	child.Expect("ftp> ")
 	log.Printf("Success\n")
-
 }
 
 func TestInteractPing(*testing.T) {
