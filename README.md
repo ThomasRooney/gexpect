@@ -30,7 +30,7 @@ It also provides interface functions that make it much simpler to work with subp
 	sender, reciever := child.AsyncInteractChannels() // AsyncInteractChannels() (chan string, chan string)
 	sender <- "echo Hello World" // Send the line to stdin
 
-	line, open <- reciever // Recieve a line from stdout/stderr
+	line, open := <- reciever // Recieve a line from stdout/stderr
 	// When the subprocess stops (e.g. with child.Close()) , receiver is closed
 	if open {
 		fmt.Printf("Received %s", line)]
