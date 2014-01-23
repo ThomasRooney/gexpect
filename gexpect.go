@@ -11,7 +11,7 @@ import (
 )
 
 type ExpectSubprocess struct {
-	cmd *exec.Cmd
+	Cmd *exec.Cmd
 	f   *os.File
 }
 
@@ -20,7 +20,7 @@ func SpawnAtDirectory(command string, directory string) (*ExpectSubprocess, erro
 	if err != nil {
 		return nil, err
 	}
-	expect.cmd.Dir = directory
+	expect.Cmd.Dir = directory
 	return _start(expect)
 }
 
@@ -46,7 +46,7 @@ func Spawn(command string) (*ExpectSubprocess, error) {
 }
 
 func (expect *ExpectSubprocess) Close() error {
-	return expect.cmd.Process.Kill()
+	return expect.Cmd.Process.Kill()
 }
 
 func (expect *ExpectSubprocess) AsyncInteractChannels() (send chan string, receive chan string) {
@@ -187,7 +187,7 @@ func (expect *ExpectSubprocess) SendLine(command string) error {
 }
 
 func (expect *ExpectSubprocess) Interact() {
-	defer expect.cmd.Wait()
+	defer expect.Cmd.Wait()
 	go io.Copy(os.Stdout, expect.f)
 	go io.Copy(os.Stderr, expect.f)
 	go io.Copy(expect.f, os.Stdin)
@@ -224,7 +224,7 @@ func (expect *ExpectSubprocess) ReadLine() (string, error) {
 }
 
 func _start(expect *ExpectSubprocess) (*ExpectSubprocess, error) {
-	f, err := pty.Start(expect.cmd)
+	f, err := pty.Start(expect.Cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -250,9 +250,9 @@ func _spawn(command string) (*ExpectSubprocess, error) {
 	}
 
 	if numArguments >= 1 {
-		wrapper.cmd = exec.Command(path, splitArgs[1:]...)
+		wrapper.Cmd = exec.Command(path, splitArgs[1:]...)
 	} else {
-		wrapper.cmd = exec.Command(path)
+		wrapper.Cmd = exec.Command(path)
 	}
 
 	return wrapper, nil
