@@ -44,10 +44,10 @@ func main() {
 	fmt.Printf("Waiting until started.. \n")
 	wait(" ")
 	fmt.Printf("Sending Enter.. \n")
-	sender <- ""
+	sender <- "\n"
 	wait("$")
 	fmt.Printf("Sending echo.. \n")
-	sender <- "echo Hello World"
+	sender <- "echo Hello World\n"
 	wait("Hello World")
 	fmt.Printf("Received echo. \n")
 }

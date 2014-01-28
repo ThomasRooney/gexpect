@@ -72,7 +72,7 @@ func (expect *ExpectSubprocess) AsyncInteractChannels() (send chan string, recei
 					if !exists {
 						return
 					}
-					err := expect.SendLine(sendCommand)
+					err := expect.Send(sendCommand)
 					if err != nil {
 						receive <- "gexpect Error: " + err.Error()
 						return
@@ -213,6 +213,10 @@ func (expect *ExpectSubprocess) ReadUntil(delim byte) ([]byte, error) {
 			}
 		}
 	}
+}
+
+func (expect *ExpectSubprocess) Wait() error {
+	return expect.Cmd.Wait()
 }
 
 func (expect *ExpectSubprocess) ReadLine() (string, error) {

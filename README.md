@@ -27,8 +27,10 @@ It also provides interface functions that make it much simpler to work with subp
 
 	child.SendLine("/bin/sh -c 'echo Hello World | tee foo'") //  SendLine(command string) (error)
 
+	child.Wait() // Wait() (error)
+
 	sender, reciever := child.AsyncInteractChannels() // AsyncInteractChannels() (chan string, chan string)
-	sender <- "echo Hello World" // Send the line to stdin
+	sender <- "echo Hello World\n" // Send to stdin
 
 	line, open := <- reciever // Recieve a line from stdout/stderr
 	// When the subprocess stops (e.g. with child.Close()) , receiver is closed

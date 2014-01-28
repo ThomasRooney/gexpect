@@ -51,12 +51,12 @@ func TestBiChannel(*testing.T) {
 			}
 		}
 	}
-	sender <- ""
-	sender <- "echo Hello World"
+	sender <- "\n"
+	sender <- "echo Hello World\n"
 	wait("Hello World")
-	sender <- "times"
+	sender <- "times\n"
 	wait("s")
-	sender <- "^D"
+	sender <- "^D\n"
 	log.Printf("Success\n")
 
 }
