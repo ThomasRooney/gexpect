@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"time"
 )
 
 type ExpectSubprocess struct {
@@ -141,6 +142,19 @@ func buildKMPTable(searchString string) []int {
 		}
 	}
 	return table
+}
+
+func (expect *ExpectSubprocess) ExpectTimeout(searchString string, timeout time.Duration) (e error) {
+	result := make(chan error)
+	go func() {
+		result <- expect.Expect(searchString)
+	}()
+	select {
+	case e = <-result:
+	case <-time.After(timeout):
+		e = errors.New("Expect timed out.")
+	}
+	return e
 }
 
 func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
