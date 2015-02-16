@@ -161,7 +161,7 @@ func (expect *ExpectSubprocess) ExpectTimeout(searchString string, timeout time.
 func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
 	chunk := make([]byte, len(searchString)*2)
 	target := len(searchString)
-	expect.outputBuffer = expect.outputBuffer[:]
+	expect.outputBuffer = expect.outputBuffer[:0]
 	m := 0
 	i := 0
 	// Build KMP Table
