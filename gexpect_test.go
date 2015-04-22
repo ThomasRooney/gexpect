@@ -21,8 +21,7 @@ func TestHelloWorld(*testing.T) {
 
 func TestDoubleHelloWorld(*testing.T) {
 	log.Printf("Testing Double Hello World... ")
-	//child, err := Spawn(`sh -c "echo Hello World ; echo Hello ; echo Hi"`)
-	child, err := Spawn(`sh -c "echo Hello World ; sleep 0.1 ; echo Hello ; sleep 0.1 ; echo Hi"`)
+	child, err := Spawn(`sh -c "echo Hello World ; echo Hello ; echo Hi"`)
 	if err != nil {
 		panic(err)
 	}
