@@ -14,15 +14,15 @@ import (
 
 type ExpectSubprocess struct {
 	Cmd *exec.Cmd
-	buf *Buffer
+	buf *buffer
 }
 
-type Buffer struct {
+type buffer struct {
 	f *os.File
 	b bytes.Buffer
 }
 
-func (buf *Buffer) Read(chunk []byte) (int, error) {
+func (buf *buffer) Read(chunk []byte) (int, error) {
 	nread := 0
 	if buf.b.Len() > 0 {
 		n, err := buf.b.Read(chunk)
@@ -38,7 +38,7 @@ func (buf *Buffer) Read(chunk []byte) (int, error) {
 	return fn + nread, err
 }
 
-func (buf *Buffer) PutBack(chunk []byte) {
+func (buf *buffer) PutBack(chunk []byte) {
 	if len(chunk) == 0 {
 		return
 	}
@@ -314,7 +314,7 @@ func _spawn(command string) (*ExpectSubprocess, error) {
 	} else {
 		wrapper.Cmd = exec.Command(path)
 	}
-	wrapper.buf = new(Buffer)
+	wrapper.buf = new(buffer)
 
 	return wrapper, nil
 }
