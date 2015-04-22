@@ -12,8 +12,9 @@ import (
 )
 
 type ExpectSubprocess struct {
-	Cmd *exec.Cmd
-	f   *os.File
+	Cmd          *exec.Cmd
+	f            *os.File
+	outputBuffer []byte
 }
 
 func SpawnAtDirectory(command string, directory string) (*ExpectSubprocess, error) {
@@ -160,6 +161,7 @@ func (expect *ExpectSubprocess) ExpectTimeout(searchString string, timeout time.
 func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
 	chunk := make([]byte, len(searchString)*2)
 	target := len(searchString)
+	expect.outputBuffer = expect.outputBuffer[:0]
 	m := 0
 	i := 0
 	// Build KMP Table
@@ -171,6 +173,7 @@ func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
 		if err != nil {
 			return err
 		}
+		expect.outputBuffer = append(expect.outputBuffer, chunk[:n]...)
 		offset := m + i
 		for m+i-offset < n {
 			if searchString[i] == chunk[m+i-offset] {
@@ -188,6 +191,10 @@ func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
 			}
 		}
 	}
+}
+
+func (expect *ExpectSubprocess) ReturnOutputBuffer() []byte {
+	return expect.outputBuffer
 }
 
 func (expect *ExpectSubprocess) Send(command string) error {
@@ -253,6 +260,7 @@ func _start(expect *ExpectSubprocess) (*ExpectSubprocess, error) {
 
 func _spawn(command string) (*ExpectSubprocess, error) {
 	wrapper := new(ExpectSubprocess)
+	wrapper.outputBuffer = make([]byte, 0)
 
 	splitArgs, err := shell.Split(command)
 	if err != nil {
