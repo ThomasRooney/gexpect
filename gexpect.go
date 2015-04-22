@@ -12,12 +12,17 @@ import (
 	"time"
 )
 
-type buffer struct {
-	f  *os.File
-	b  bytes.Buffer
+type ExpectSubprocess struct {
+	Cmd *exec.Cmd
+	buf *Buffer
 }
 
-func (buf *buffer) Read(chunk []byte) (int, error) {
+type Buffer struct {
+	f *os.File
+	b bytes.Buffer
+}
+
+func (buf *Buffer) Read(chunk []byte) (int, error) {
 	nread := 0
 	if buf.b.Len() > 0 {
 		n, err := buf.b.Read(chunk)
@@ -33,7 +38,7 @@ func (buf *buffer) Read(chunk []byte) (int, error) {
 	return fn + nread, err
 }
 
-func (buf *buffer) PutBack(chunk []byte) {
+func (buf *Buffer) PutBack(chunk []byte) {
 	if len(chunk) == 0 {
 		return
 	}
@@ -46,11 +51,6 @@ func (buf *buffer) PutBack(chunk []byte) {
 	d = append(d, buf.b.Bytes()...)
 	buf.b.Reset()
 	buf.b.Write(d)
-}
-
-type ExpectSubprocess struct {
-	Cmd *exec.Cmd
-	buf *buffer
 }
 
 func SpawnAtDirectory(command string, directory string) (*ExpectSubprocess, error) {
@@ -123,10 +123,8 @@ func (expect *ExpectSubprocess) AsyncInteractChannels() (send chan string, recei
 	return
 }
 
-// This quite possibly won't work as we're operating on an incomplete stream. It might work if all the input is within one
-// Flush, but that can't be relied upon. I need to find a nice, safe way to apply a regex to a stream of partial content, given we
-// don't not knowing how long our input is, and thus can't buffer it. Until that point, please just use Expect, or use the channel
-// to parse the stream yourself.
+// This is an unsound function. It shouldn't be trusted, as we're not using a stream based regex library.
+// TODO: Find a regex stream library, plug it in, or develop my own for fun.
 func (expect *ExpectSubprocess) ExpectRegex(regexSearchString string) (e error) {
 	var size = len(regexSearchString)
 
@@ -245,7 +243,6 @@ func (expect *ExpectSubprocess) Interact() {
 	defer expect.Cmd.Wait()
 	io.Copy(os.Stdout, &expect.buf.b)
 	go io.Copy(os.Stdout, expect.buf.f)
-	go io.Copy(os.Stderr, expect.buf.f)
 	go io.Copy(expect.buf.f, os.Stdin)
 }
 
@@ -317,7 +314,7 @@ func _spawn(command string) (*ExpectSubprocess, error) {
 	} else {
 		wrapper.Cmd = exec.Command(path)
 	}
-	wrapper.buf = new(buffer)
+	wrapper.buf = new(Buffer)
 
 	return wrapper, nil
 }
