@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"regexp"
 	"time"
+	"unicode/utf8"
 )
 
 type ExpectSubprocess struct {
@@ -36,6 +37,39 @@ func (buf *buffer) Read(chunk []byte) (int, error) {
 	}
 	fn, err := buf.f.Read(chunk[nread:])
 	return fn + nread, err
+}
+
+func (buf *buffer) ReadRune() (r rune, size int, err error) {
+	l := buf.b.Len()
+
+	chunk := make([]byte, utf8.UTFMax)
+	if l > 0 {
+		n, err := buf.b.Read(chunk)
+		if err != nil {
+			return 0, 0, err
+		}
+		if utf8.FullRune(chunk) {
+			r, rL := utf8.DecodeRune(chunk)
+			if n > rL {
+				buf.PutBack(chunk[rL:n])
+			}
+			return r, rL, nil
+		}
+	}
+	// else add bytes from the file, then try that
+	for l < utf8.UTFMax {
+		fn, err := buf.f.Read(chunk[l : l+1])
+		if err != nil {
+			return 0, 0, err
+		}
+		l = l + fn
+
+		if utf8.FullRune(chunk) {
+			r, rL := utf8.DecodeRune(chunk)
+			return r, rL, nil
+		}
+	}
+	return 0, 0, errors.New("File is not a valid UTF=8 encoding")
 }
 
 func (buf *buffer) PutBack(chunk []byte) {
@@ -123,31 +157,8 @@ func (expect *ExpectSubprocess) AsyncInteractChannels() (send chan string, recei
 	return
 }
 
-// This is an unsound function. It shouldn't be trusted, as we're not using a stream based regex library.
-// TODO: Find a regex stream library, plug it in, or develop my own for fun.
-func (expect *ExpectSubprocess) ExpectRegex(regexSearchString string) (e error) {
-	var size = len(regexSearchString)
-
-	if size < 255 {
-		size = 255
-	}
-
-	chunk := make([]byte, size)
-
-	for {
-		n, err := expect.buf.Read(chunk)
-
-		if err != nil {
-			return err
-		}
-		success, err := regexp.Match(regexSearchString, chunk[:n])
-		if err != nil {
-			return err
-		}
-		if success {
-			return nil
-		}
-	}
+func (expect *ExpectSubprocess) ExpectRegex(regex string) (bool, error) {
+	return regexp.MatchReader(regex, expect.buf)
 }
 
 func buildKMPTable(searchString string) []int {

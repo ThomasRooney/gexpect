@@ -82,18 +82,6 @@ func TestBiChannel(*testing.T) {
 
 }
 
-func TestExpectRegex(*testing.T) {
-	log.Printf("Testing ExpectRegex... ")
-
-	child, err := Spawn("/bin/sh times")
-	if err != nil {
-		panic(err)
-	}
-	child.ExpectRegex("Name")
-	log.Printf("Success\n")
-
-}
-
 func TestCommandStart(*testing.T) {
 	log.Printf("Testing Command... ")
 
@@ -104,5 +92,42 @@ func TestCommandStart(*testing.T) {
 	}
 	child.Start()
 	child.Expect("Hello World")
+	log.Printf("Success\n")
+}
+
+var regexMatchTests = []struct {
+	re   string
+	good string
+	bad  string
+}{
+	{`a`, `a`, `b`},
+	{`.b`, `ab`, `ac`},
+	{`a+hello`, `aaaahello`, `bhello`},
+	{`(hello|world)`, `hello`, `unknown`},
+	{`(hello|world)`, `world`, `unknown`},
+}
+
+func TestRegex(t *testing.T) {
+	log.Printf("Testing Regular Expression Matching... ")
+	for _, tt := range regexMatchTests {
+		runTest := func(input string) bool {
+			var match bool
+			child, err := Spawn("echo \"\"; echo \"" + input + "\"")
+			if err != nil {
+				t.Fatal(err)
+			}
+			match, err = child.ExpectRegex(tt.re)
+			if err != nil {
+				t.Fatal(err)
+			}
+			return match
+		}
+		if !runTest(tt.good) {
+			t.Errorf("Regex Not matching [%#q] with pattern [%#q]", tt.good, tt.re)
+		}
+		if runTest(tt.bad) {
+			t.Errorf("Regex Matching [%#q] with pattern [%#q]", tt.bad, tt.re)
+		}
+	}
 	log.Printf("Success\n")
 }
