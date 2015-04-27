@@ -133,6 +133,7 @@ var regexFindTests = []struct {
 	{`(a)`, `a`, []string{"a", "a"}},
 	{`so.. (hello|world)`, `so.. hello`, []string{"so.. hello", "hello"}},
 	{`(a+)hello`, `aaaahello`, []string{"aaaahello", "aaaa"}},
+	{`\d+ (\d+) (\d+)`, `123 456 789`, []string{"123 456 789", "456", "789"}},
 }
 
 func TestRegexFind(t *testing.T) {
