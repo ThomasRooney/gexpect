@@ -19,8 +19,21 @@ type ExpectSubprocess struct {
 }
 
 type buffer struct {
-	f *os.File
-	b bytes.Buffer
+	f          *os.File
+	b          bytes.Buffer
+	collect    bool
+	collection bytes.Buffer
+}
+
+func (buf *buffer) StartCollecting() {
+	buf.collect = true
+}
+
+func (buf *buffer) StopCollecting() (result string) {
+	result = string(buf.collection.Bytes())
+	buf.collect = false
+	buf.collection.Reset()
+	return result
 }
 
 func (buf *buffer) Read(chunk []byte) (int, error) {
@@ -53,6 +66,9 @@ func (buf *buffer) ReadRune() (r rune, size int, err error) {
 			if n > rL {
 				buf.PutBack(chunk[rL:n])
 			}
+			if buf.collect {
+				buf.collection.WriteRune(r)
+			}
 			return r, rL, nil
 		}
 	}
@@ -66,6 +82,9 @@ func (buf *buffer) ReadRune() (r rune, size int, err error) {
 
 		if utf8.FullRune(chunk) {
 			r, rL := utf8.DecodeRune(chunk)
+			if buf.collect {
+				buf.collection.WriteRune(r)
+			}
 			return r, rL, nil
 		}
 	}
@@ -159,6 +178,25 @@ func (expect *ExpectSubprocess) AsyncInteractChannels() (send chan string, recei
 
 func (expect *ExpectSubprocess) ExpectRegex(regex string) (bool, error) {
 	return regexp.MatchReader(regex, expect.buf)
+}
+
+func (expect *ExpectSubprocess) ExpectRegexFind(regex string) ([]string, error) {
+	re, err := regexp.Compile(regex)
+	if err != nil {
+		return nil, err
+	}
+	expect.buf.StartCollecting()
+	pairs := re.FindReaderSubmatchIndex(expect.buf)
+	stringIndexedInto := expect.buf.StopCollecting()
+	l := len(pairs)
+	numPairs := l / 2
+	result := make([]string, numPairs)
+	result[0] = stringIndexedInto[pairs[0]:pairs[1]]
+	for i := 0; i < numPairs; i += 1 {
+		result[i] = stringIndexedInto[pairs[i*2]:pairs[i*2+1]]
+	}
+	// convert indexes to strings
+	return result, nil
 }
 
 func buildKMPTable(searchString string) []int {
