@@ -191,7 +191,6 @@ func (expect *ExpectSubprocess) ExpectRegexFind(regex string) ([]string, error) 
 	l := len(pairs)
 	numPairs := l / 2
 	result := make([]string, numPairs)
-	result[0] = stringIndexedInto[pairs[0]:pairs[1]]
 	for i := 0; i < numPairs; i += 1 {
 		result[i] = stringIndexedInto[pairs[i*2]:pairs[i*2+1]]
 	}
