@@ -52,7 +52,7 @@ func TestHelloWorldFailureCase(t *testing.T) {
 
 func TestBiChannel(t *testing.T) {
 	t.Logf("Testing BiChannel screen... ")
-	child, err := Spawn("screen")
+	child, err := Spawn("cat")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,12 +68,12 @@ func TestBiChannel(t *testing.T) {
 			}
 		}
 	}
-	sender <- "\n"
-	sender <- "echo Hello World\n"
-	wait("Hello World")
-	sender <- "times\n"
-	wait("s")
-	sender <- "^D\n"
+	sender <- "echo\n"
+	wait("echo")
+	sender <- "echo2"
+	wait("echo2")
+	child.Close()
+	// child.Wait()
 }
 
 func TestCommandStart(t *testing.T) {
