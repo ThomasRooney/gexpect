@@ -243,6 +243,9 @@ func (expect *ExpectSubprocess) ExpectTimeout(searchString string, timeout time.
 func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
 	chunk := make([]byte, len(searchString)*2)
 	target := len(searchString)
+	if expect.outputBuffer != nil {
+		expect.outputBuffer = expect.outputBuffer[0:]
+	}
 	m := 0
 	i := 0
 	// Build KMP Table
@@ -253,6 +256,9 @@ func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
 
 		if err != nil {
 			return err
+		}
+		if expect.outputBuffer != nil {
+			expect.outputBuffer = append(expect.outputBuffer, chunk[:n]...)
 		}
 		offset := m + i
 		for m+i-offset < n {
@@ -280,6 +286,10 @@ func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
 func (expect *ExpectSubprocess) Send(command string) error {
 	_, err := io.WriteString(expect.buf.f, command)
 	return err
+}
+
+func (expect *ExpectSubprocess) Capture() {
+	expect.outputBuffer = make([]byte, 0)
 }
 
 func (expect *ExpectSubprocess) SendLine(command string) error {
