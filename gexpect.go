@@ -14,14 +14,16 @@ import (
 )
 
 type ExpectSubprocess struct {
-	Cmd *exec.Cmd
-	buf *buffer
+	Cmd          *exec.Cmd
+	buf          *buffer
+	outputBuffer []byte
 }
 
 type buffer struct {
-	f          *os.File
-	b          bytes.Buffer
-	collect    bool
+	f       *os.File
+	b       bytes.Buffer
+	collect bool
+
 	collection bytes.Buffer
 }
 
@@ -353,6 +355,8 @@ func _start(expect *ExpectSubprocess) (*ExpectSubprocess, error) {
 
 func _spawn(command string) (*ExpectSubprocess, error) {
 	wrapper := new(ExpectSubprocess)
+
+	wrapper.outputBuffer = nil
 
 	splitArgs, err := shell.Split(command)
 	if err != nil {
