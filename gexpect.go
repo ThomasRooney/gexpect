@@ -291,7 +291,9 @@ func (expect *ExpectSubprocess) Send(command string) error {
 }
 
 func (expect *ExpectSubprocess) Capture() {
-	expect.outputBuffer = make([]byte, 0)
+	if expect.outputBuffer == nil {
+		expect.outputBuffer = make([]byte, 0)
+	}
 }
 
 func (expect *ExpectSubprocess) Collect() []byte {
