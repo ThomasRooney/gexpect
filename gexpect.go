@@ -211,7 +211,26 @@ func (expect *ExpectSubprocess) expectRegexFind(regex string, output bool) ([]st
 		result[i] = stringIndexedInto[pairs[i*2]:pairs[i*2+1]]
 	}
 	// convert indexes to strings
-	return result, stringIndexedInto, nil
+
+	if len(result) == 0 {
+		err = errors.New("ExpectRegex didn't find regex")
+	}
+	return result, stringIndexedInto, err
+}
+
+func (expect *ExpectSubprocess) expectTimeoutRegexFind(regex string, timeout time.Duration) (result []string, out string, err error) {
+	t := make(chan bool)
+	go func() {
+		result, out, err = expect.ExpectRegexFindWithOutput(regex)
+		t <- false
+	}()
+	go func() {
+		time.Sleep(timeout)
+		err = errors.New("ExpectRegex timed out")
+		t <- true
+	}()
+	<-t
+	return result, out, err
 }
 
 func (expect *ExpectSubprocess) ExpectRegexFind(regex string) ([]string, error) {
@@ -219,8 +238,17 @@ func (expect *ExpectSubprocess) ExpectRegexFind(regex string) ([]string, error) 
 	return result, err
 }
 
+func (expect *ExpectSubprocess) ExpectTimeoutRegexFind(regex string, timeout time.Duration) ([]string, error) {
+	result, _, err := expect.expectTimeoutRegexFind(regex, timeout)
+	return result, err
+}
+
 func (expect *ExpectSubprocess) ExpectRegexFindWithOutput(regex string) ([]string, string, error) {
 	return expect.expectRegexFind(regex, true)
+}
+
+func (expect *ExpectSubprocess) ExpectTimeoutRegexFindWithOutput(regex string, timeout time.Duration) ([]string, string, error) {
+	return expect.expectTimeoutRegexFind(regex, timeout)
 }
 
 func buildKMPTable(searchString string) []int {
