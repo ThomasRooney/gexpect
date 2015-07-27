@@ -196,10 +196,10 @@ func (expect *ExpectSubprocess) ExpectRegex(regex string) (bool, error) {
 	return regexp.MatchReader(regex, expect.buf)
 }
 
-func (expect *ExpectSubprocess) ExpectRegexFind(regex string) ([]string, error) {
+func (expect *ExpectSubprocess) expectRegexFind(regex string, output bool) ([]string, string, error) {
 	re, err := regexp.Compile(regex)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	expect.buf.StartCollecting()
 	pairs := re.FindReaderSubmatchIndex(expect.buf)
@@ -211,7 +211,16 @@ func (expect *ExpectSubprocess) ExpectRegexFind(regex string) ([]string, error) 
 		result[i] = stringIndexedInto[pairs[i*2]:pairs[i*2+1]]
 	}
 	// convert indexes to strings
-	return result, nil
+	return result, stringIndexedInto, nil
+}
+
+func (expect *ExpectSubprocess) ExpectRegexFind(regex string) ([]string, error) {
+	result, _, err := expect.expectRegexFind(regex, false)
+	return result, err
+}
+
+func (expect *ExpectSubprocess) ExpectRegexFindWithOutput(regex string) ([]string, string, error) {
+	return expect.expectRegexFind(regex, true)
 }
 
 func buildKMPTable(searchString string) []int {
