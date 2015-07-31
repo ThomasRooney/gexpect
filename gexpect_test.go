@@ -72,10 +72,10 @@ func TestBiChannel(t *testing.T) {
 		}
 	}
 
-	endlChar := fmt.Sprintln("")[0]
-	sender <- fmt.Sprintf("echo%c", endlChar)
+	endlChar := fmt.Sprintln("")
+	sender <- fmt.Sprintf("echo%v", endlChar)
 	wait("echo")
-	sender <- fmt.Sprintf("echo2%c", endlChar)
+	sender <- fmt.Sprintf("echo2%v", endlChar)
 	wait("echo2")
 	child.Close()
 	child.Wait()
@@ -208,7 +208,7 @@ func TestRegexWithOutput(t *testing.T) {
 }
 
 func TestRegexTimeoutWithOutput(t *testing.T) {
-	t.Logf("Testing Regular Expression search with output...")
+	t.Logf("Testing Regular Expression search with timeout and output...")
 
 	seconds := 2
 	timeout := time.Duration(seconds-1) * time.Second
