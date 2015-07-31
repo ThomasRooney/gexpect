@@ -1,6 +1,6 @@
 package main
 
-import "github.com/ThomasRooney/gexpect"
+import "github.com/steveeJ/gexpect"
 import "fmt"
 
 func main() {

@@ -1,6 +1,6 @@
 package main
 
-import gexpect "github.com/ThomasRooney/gexpect"
+import gexpect "github.com/steveeJ/gexpect"
 import "log"
 
 func main() {
