@@ -3,14 +3,15 @@ package gexpect
 import (
 	"bytes"
 	"errors"
-	shell "github.com/kballard/go-shellquote"
-	"github.com/kr/pty"
 	"io"
 	"os"
 	"os/exec"
 	"regexp"
 	"time"
 	"unicode/utf8"
+
+	shell "github.com/kballard/go-shellquote"
+	"github.com/kr/pty"
 )
 
 type ExpectSubprocess struct {
