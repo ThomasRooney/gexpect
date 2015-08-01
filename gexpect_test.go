@@ -259,7 +259,7 @@ func TestRegexTimeoutWithOutput(t *testing.T) {
 	searchPattern := `find me`
 	result, out, err := p.ExpectTimeoutRegexFindWithOutput(searchPattern, timeout)
 	if err == nil {
-		t.Fatalf("Shouldn't finished call with result: %v", result)
+		t.Fatalf("Shouldn't have finished call with result: %v", result)
 	}
 
 	seconds = 2
