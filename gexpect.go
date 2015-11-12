@@ -5,14 +5,15 @@ package gexpect
 import (
 	"bytes"
 	"errors"
-	shell "github.com/kballard/go-shellquote"
-	"github.com/kr/pty"
 	"io"
 	"os"
 	"os/exec"
 	"regexp"
 	"time"
 	"unicode/utf8"
+
+	shell "github.com/kballard/go-shellquote"
+	"github.com/kr/pty"
 )
 
 type ExpectSubprocess struct {
@@ -141,6 +142,7 @@ func Spawn(command string) (*ExpectSubprocess, error) {
 }
 
 func (expect *ExpectSubprocess) Close() error {
+	expect.buf.f.Close()
 	return expect.Cmd.Process.Kill()
 }
 
