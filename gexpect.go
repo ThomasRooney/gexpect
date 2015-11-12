@@ -142,8 +142,13 @@ func Spawn(command string) (*ExpectSubprocess, error) {
 }
 
 func (expect *ExpectSubprocess) Close() error {
-	expect.buf.f.Close()
-	return expect.Cmd.Process.Kill()
+	if err := expect.Cmd.Process.Kill(); err != nil {
+		return err
+	}
+	if err := expect.buf.f.Close(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (expect *ExpectSubprocess) AsyncInteractChannels() (send chan string, receive chan string) {
