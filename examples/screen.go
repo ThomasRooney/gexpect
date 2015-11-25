@@ -1,6 +1,6 @@
 package main
 
-import "github.com/steveeJ/gexpect"
+import "github.com/coreos/gexpect"
 import "fmt"
 import "strings"
 
