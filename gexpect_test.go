@@ -72,7 +72,7 @@ func TestBiChannel(t *testing.T) {
 	}
 	sender <- "echo\n"
 	wait("echo")
-	sender <- "echo2"
+	sender <- "echo2\n"
 	wait("echo2")
 	child.Close()
 	// child.Wait()
