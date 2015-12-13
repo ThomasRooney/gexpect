@@ -58,10 +58,10 @@ func TestBiChannel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sender, reciever := child.AsyncInteractChannels()
+	sender, receiver := child.AsyncInteractChannels()
 	wait := func(str string) {
 		for {
-			msg, open := <-reciever
+			msg, open := <-receiver
 			if !open {
 				return
 			}
