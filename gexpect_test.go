@@ -7,6 +7,18 @@ import (
 	"testing"
 )
 
+func TestEmptySearchString(t *testing.T) {
+	t.Logf("Testing empty search string...")
+	child, err := Spawn("echo Hello World")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = child.Expect("")
+	if err != ErrEmptySearch {
+		t.Fatalf("Expected empty search error, got %v", err)
+	}
+}
+
 func TestHelloWorld(t *testing.T) {
 	t.Logf("Testing Hello World... ")
 	child, err := Spawn("echo \"Hello World\"")
