@@ -16,6 +16,11 @@ import (
 	"github.com/kr/pty"
 )
 
+var (
+	ErrEmptySearch = errors.New("empty search string")
+	ErrTimeout     = errors.New("expect timed out")
+)
+
 type ExpectSubprocess struct {
 	Cmd          *exec.Cmd
 	buf          *buffer
@@ -246,14 +251,17 @@ func (expect *ExpectSubprocess) ExpectTimeout(searchString string, timeout time.
 	select {
 	case e = <-result:
 	case <-time.After(timeout):
-		e = errors.New("Expect timed out.")
+		e = ErrTimeout
 	}
 	return e
 }
 
 func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
-	chunk := make([]byte, len(searchString)*2)
 	target := len(searchString)
+	if target < 1 {
+		return ErrEmptySearch
+	}
+	chunk := make([]byte, target*2)
 	if expect.outputBuffer != nil {
 		expect.outputBuffer = expect.outputBuffer[0:]
 	}
@@ -264,7 +272,6 @@ func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
 
 	for {
 		n, err := expect.buf.Read(chunk)
-
 		if err != nil {
 			return err
 		}
