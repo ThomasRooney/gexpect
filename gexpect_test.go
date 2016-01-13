@@ -275,3 +275,88 @@ func TestRegexTimeoutWithOutput(t *testing.T) {
 		t.Fatalf("Didn't find %v in output: %v", searchPattern, out)
 	}
 }
+
+func TestRegexFindNoExcessBytes(t *testing.T) {
+	t.Logf("Testing Regular Expressions returning output with no excess strings")
+	repeats := 100
+	tests := []struct {
+		desc           string
+		loopBody       string
+		searchPattern  string
+		expectFullTmpl string
+		unmatchedData  string
+	}{
+		{
+			desc:           `matching lines line by line with $ at the end of the regexp`,
+			loopBody:       `echo "prefix: ${i} line"`,
+			searchPattern:  `(?m)^prefix:\s+(\d+) line\s??$`,
+			expectFullTmpl: `prefix: %d line`,
+			unmatchedData:  "\n",
+			// the "$" char at the end of regexp does not
+			// match the \n, so it is left as an unmatched
+			// data
+		},
+		{
+			desc:           `matching lines line by line with \n at the end of the regexp`,
+			loopBody:       `echo "prefix: ${i} line"`,
+			searchPattern:  `(?m)^prefix:\s+(\d+) line\s??\n`,
+			expectFullTmpl: `prefix: %d line`,
+			unmatchedData:  "",
+		},
+		{
+			desc:           `matching chunks in single line chunk by chunk`,
+			loopBody:       `echo -n "a ${i} b"`,
+			searchPattern:  `a\s+(\d+)\s+b`,
+			expectFullTmpl: `a %d b`,
+			unmatchedData:  "",
+		},
+	}
+	seqCmd := fmt.Sprintf("`seq 1 %d`", repeats)
+	shCmdTmpl := fmt.Sprintf(`sh -c 'for i in %s; do %%s; done'`, seqCmd)
+	for _, tt := range tests {
+		t.Logf("Test: %s", tt.desc)
+		shCmd := fmt.Sprintf(shCmdTmpl, tt.loopBody)
+		t.Logf("Running command: %s", shCmd)
+		p, err := Spawn(shCmd)
+		if err != nil {
+			t.Fatalf("Cannot exec shell script: %v", err)
+		}
+		defer func() {
+			if err := p.Wait(); err != nil {
+				t.Fatalf("shell script didn't terminate correctly: %v", err)
+			}
+		}()
+		for i := 1; i <= repeats; i++ {
+			matches, output, err := p.ExpectRegexFindWithOutput(tt.searchPattern)
+			if err != nil {
+				t.Fatalf("Failed to get the match number %d: %v", i, err)
+			}
+			if len(matches) != 2 {
+				t.Fatalf("Expected only 2 matches, got %d", len(matches))
+			}
+			full := strings.TrimSpace(matches[0])
+			expFull := fmt.Sprintf(tt.expectFullTmpl, i)
+			partial := matches[1]
+			expPartial := fmt.Sprintf("%d", i)
+			if full != expFull {
+				t.Fatalf("Did not the expected full match %q, got %q", expFull, full)
+			}
+			if partial != expPartial {
+				t.Fatalf("Did not the expected partial match %q, got %q", expPartial, partial)
+			}
+			// The output variable usually contains the
+			// unmatched data followed by the whole match.
+			// The first line is special as it has no data
+			// preceding it.
+			var expectedOutput string
+			if i == 1 || tt.unmatchedData == "" {
+				expectedOutput = matches[0]
+			} else {
+				expectedOutput = fmt.Sprintf("%s%s", tt.unmatchedData, matches[0])
+			}
+			if output != expectedOutput {
+				t.Fatalf("The collected output %q should be the same as the whole match %q", output, expectedOutput)
+			}
+		}
+	}
+}
