@@ -202,6 +202,15 @@ func (expect *ExpectSubprocess) expectRegexFind(regex string, output bool) ([]st
 
 	if len(result) == 0 {
 		err = fmt.Errorf("ExpectRegex didn't find regex '%v'.", regex)
+	} else {
+		// The number in pairs[1] is an index of a first
+		// character outside the whole match
+		putBackIdx := pairs[1]
+		if len(stringIndexedInto) > putBackIdx {
+			stringToPutBack := stringIndexedInto[putBackIdx:]
+			stringIndexedInto = stringIndexedInto[:putBackIdx]
+			expect.buf.PutBack([]byte(stringToPutBack))
+		}
 	}
 	return result, stringIndexedInto, err
 }
