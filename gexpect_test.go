@@ -1,3 +1,5 @@
+// +build !windows
+
 package gexpect
 
 import (
@@ -6,6 +8,18 @@ import (
 	"testing"
 	"time"
 )
+
+func TestEmptySearchString(t *testing.T) {
+	t.Logf("Testing empty search string...")
+	child, err := Spawn("echo Hello World")
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = child.Expect("")
+	if err != ErrEmptySearch {
+		t.Fatalf("Expected empty search error, got %v", err)
+	}
+}
 
 func TestHelloWorld(t *testing.T) {
 	t.Logf("Testing Hello World... ")
@@ -59,10 +73,10 @@ func TestBiChannel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sender, reciever := child.AsyncInteractChannels()
+	sender, receiver := child.AsyncInteractChannels()
 	wait := func(str string) {
 		for {
-			msg, open := <-reciever
+			msg, open := <-receiver
 			if !open {
 				return
 			}

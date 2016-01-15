@@ -1,3 +1,5 @@
+// +build !windows
+
 package gexpect
 
 import (
@@ -13,6 +15,10 @@ import (
 
 	shell "github.com/kballard/go-shellquote"
 	"github.com/kr/pty"
+)
+
+var (
+	ErrEmptySearch = errors.New("empty search string")
 )
 
 type ExpectSubprocess struct {
@@ -141,7 +147,13 @@ func Spawn(command string) (*ExpectSubprocess, error) {
 }
 
 func (expect *ExpectSubprocess) Close() error {
-	return expect.Cmd.Process.Kill()
+	if err := expect.Cmd.Process.Kill(); err != nil {
+		return err
+	}
+	if err := expect.buf.f.Close(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (expect *ExpectSubprocess) AsyncInteractChannels() (send chan string, receive chan string) {
@@ -291,8 +303,11 @@ func (expect *ExpectSubprocess) ExpectTimeout(searchString string, timeout time.
 }
 
 func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
-	chunk := make([]byte, len(searchString)*2)
 	target := len(searchString)
+	if target < 1 {
+		return ErrEmptySearch
+	}
+	chunk := make([]byte, target*2)
 	if expect.outputBuffer != nil {
 		expect.outputBuffer = expect.outputBuffer[0:]
 	}
@@ -303,7 +318,6 @@ func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
 
 	for {
 		n, err := expect.buf.Read(chunk)
-
 		if err != nil {
 			return err
 		}
