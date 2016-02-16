@@ -178,3 +178,26 @@ func TestRegexFind(t *testing.T) {
 		}
 	}
 }
+
+func TestReadLine(t *testing.T) {
+	t.Logf("Testing ReadLine...")
+
+	child, err := Spawn("echo -e \"foo\nbar\"")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err := child.ReadLine()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s != "foo\r" {
+		t.Fatalf("expected 'foo\\r', got '%s'", s)
+	}
+	s, err = child.ReadLine()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s != "bar\r" {
+		t.Fatalf("expected 'bar\\r', got '%s'", s)
+	}
+}
