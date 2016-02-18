@@ -72,7 +72,7 @@ func (buf *buffer) ReadRune() (r rune, size int, err error) {
 		if err != nil {
 			return 0, 0, err
 		}
-		if utf8.FullRune(chunk) {
+		if utf8.FullRune(chunk[:n]) {
 			r, rL := utf8.DecodeRune(chunk)
 			if n > rL {
 				buf.PutBack(chunk[rL:n])
@@ -91,7 +91,7 @@ func (buf *buffer) ReadRune() (r rune, size int, err error) {
 		}
 		l = l + fn
 
-		if utf8.FullRune(chunk) {
+		if utf8.FullRune(chunk[:l]) {
 			r, rL := utf8.DecodeRune(chunk)
 			if buf.collect {
 				buf.collection.WriteRune(r)

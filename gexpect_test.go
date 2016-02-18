@@ -3,7 +3,9 @@
 package gexpect
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"testing"
 	"time"
@@ -117,6 +119,7 @@ var regexMatchTests = []struct {
 	{`a+hello`, `aaaahello`, `bhello`},
 	{`(hello|world)`, `hello`, `unknown`},
 	{`(hello|world)`, `world`, `unknown`},
+	{"\u00a9", "\u00a9", `unknown`}, // 2 bytes long unicode character "copyright sign"
 }
 
 func TestRegexMatch(t *testing.T) {
@@ -153,6 +156,7 @@ var regexFindTests = []struct {
 	{`so.. (hello|world)`, `so.. hello`, []string{"so.. hello", "hello"}},
 	{`(a+)hello`, `aaaahello`, []string{"aaaahello", "aaaa"}},
 	{`\d+ (\d+) (\d+)`, `123 456 789`, []string{"123 456 789", "456", "789"}},
+	{`\d+ (\d+) (\d+)`, "\u00a9 123 456 789 \u00a9", []string{"123 456 789", "456", "789"}}, // check unicode characters
 }
 
 func TestRegexFind(t *testing.T) {
@@ -359,4 +363,57 @@ func TestRegexFindNoExcessBytes(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestBufferReadRune(t *testing.T) {
+	tests := []struct {
+		bufferContent []byte
+		fileContent   []byte
+		expectedRune  rune
+	}{
+		// unicode "copyright char" is \u00a9 is encoded as two bytes in utf8 0xc2 0xa9
+		{[]byte{0xc2, 0xa9}, []byte{}, '\u00a9'}, // whole rune is already in buffer.b
+		{[]byte{0xc2}, []byte{0xa9}, '\u00a9'},   // half of is in the buffer.b and another half still in buffer.f (file)
+		{[]byte{}, []byte{0xc2, 0xa9}, '\u00a9'}, // whole rune is the file
+		// some random noise in the end of file
+		{[]byte{0xc2, 0xa9}, []byte{0x20, 0x20, 0x20, 0x20}, '\u00a9'},
+		{[]byte{0xc2}, []byte{0xa9, 0x20, 0x20, 0x20, 0x20}, '\u00a9'},
+		{[]byte{}, []byte{0xc2, 0xa9, 0x20, 0x20, 0x20, 0x20}, '\u00a9'},
+	}
+
+	for i, tt := range tests {
+
+		// prepare tmp file with fileContent
+		f, err := ioutil.TempFile("", "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		n, err := f.Write(tt.fileContent)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n != len(tt.fileContent) {
+			t.Fatal("expected fileContent written to temp file")
+		}
+		_, err = f.Seek(0, 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// new buffer
+		buf := buffer{f: f, b: *bytes.NewBuffer(tt.bufferContent)}
+
+		// call ReadRune
+		r, size, err := buf.ReadRune()
+
+		if r != tt.expectedRune {
+			t.Fatalf("#%d: expected rune %+q but go is %+q", i, tt.expectedRune, r)
+		}
+
+		if size != len(string(tt.expectedRune)) {
+			t.Fatalf("#%d: expected rune %d bytes long but got just %d bytes long", i, len(string(tt.expectedRune)), size)
+		}
+
+	}
+
 }
