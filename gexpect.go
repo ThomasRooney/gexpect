@@ -383,12 +383,7 @@ func (expect *ExpectSubprocess) ReadUntil(delim byte) ([]byte, error) {
 	chunk := make([]byte, 255)
 
 	for {
-
 		n, err := expect.buf.Read(chunk)
-
-		if err != nil {
-			return join, err
-		}
 
 		for i := 0; i < n; i++ {
 			if chunk[i] == delim {
@@ -400,6 +395,10 @@ func (expect *ExpectSubprocess) ReadUntil(delim byte) ([]byte, error) {
 				join = append(join, chunk[i])
 			}
 		}
+
+		if err != nil {
+			return join, err
+		}
 	}
 }
 
@@ -409,10 +408,7 @@ func (expect *ExpectSubprocess) Wait() error {
 
 func (expect *ExpectSubprocess) ReadLine() (string, error) {
 	str, err := expect.ReadUntil('\n')
-	if err != nil {
-		return "", err
-	}
-	return string(str), nil
+	return string(str), err
 }
 
 func _start(expect *ExpectSubprocess) (*ExpectSubprocess, error) {
