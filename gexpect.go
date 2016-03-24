@@ -332,7 +332,7 @@ func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
 				if i == target {
 					unreadIndex := m + i - offset
 					if len(chunk) > unreadIndex {
-						expect.buf.PutBack(chunk[unreadIndex:])
+						expect.buf.PutBack(chunk[unreadIndex:n])
 					}
 					return nil
 				}
