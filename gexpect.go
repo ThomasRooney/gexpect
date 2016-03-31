@@ -19,7 +19,6 @@ import (
 
 var (
 	ErrEmptySearch = errors.New("empty search string")
-	ErrTimeout     = errors.New("expect timed out")
 )
 
 type ExpectSubprocess struct {
