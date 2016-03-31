@@ -188,6 +188,31 @@ func TestRegexFind(t *testing.T) {
 	}
 }
 
+func TestReadLine(t *testing.T) {
+	t.Logf("Testing ReadLine...")
+
+	child, err := Spawn("echo \"foo\nbar\"")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err := child.ReadLine()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s != "foo\r" {
+		t.Fatalf("expected 'foo\\r', got '%s'", s)
+	}
+	s, err = child.ReadLine()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s != "bar\r" {
+		t.Fatalf("expected 'bar\\r', got '%s'", s)
+	}
+}
+
 func TestRegexWithOutput(t *testing.T) {
 	t.Logf("Testing Regular Expression search with output...")
 
@@ -257,7 +282,7 @@ func TestRegexTimeoutWithOutput(t *testing.T) {
 
 func TestRegexFindNoExcessBytes(t *testing.T) {
 	t.Logf("Testing Regular Expressions returning output with no excess strings")
-	repeats := 100
+	repeats := 50
 	tests := []struct {
 		desc           string
 		loopBody       string
@@ -284,7 +309,7 @@ func TestRegexFindNoExcessBytes(t *testing.T) {
 		},
 		{
 			desc:           `matching chunks in single line chunk by chunk`,
-			loopBody:       `echo -n "a ${i} b"`,
+			loopBody:       `printf "a ${i} b"`,
 			searchPattern:  `a\s+(\d+)\s+b`,
 			expectFullTmpl: `a %d b`,
 			unmatchedData:  "",
