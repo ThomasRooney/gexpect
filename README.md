@@ -23,7 +23,7 @@ It makes it simpler to create and control other terminal applications.
 
 `ReadLine`, `ReadUntil` and `SendLine` send strings from/to `stdout/stdin` respectively
 
-	child := gexpect.Spawn("cat")
+	child, _ := gexpect.Spawn("cat")
 	child.SendLine("echoing process_stdin") //  SendLine(command string) (error)
 	msg, _ := child.ReadLine() // msg = echoing process_stdin
 
@@ -34,24 +34,24 @@ It makes it simpler to create and control other terminal applications.
 
 `AsyncInteractChannels` spawns two go routines to pipe into and from `stdout`/`stdin`, allowing for some usecases to be a little simpler.
 
-	child := gexpect.spawn("sh")
+	child, _ := gexpect.Spawn("sh")
 	sender, receiver := child.AsyncInteractChannels()
 	sender <- "echo Hello World\n" // Send to stdin
 	line, open := <- receiver // Recieve a line from stdout/stderr
 	// When the subprocess stops (e.g. with child.Close()) , receiver is closed
 	if open {
-		fmt.Printf("Received %s", line)]
+		fmt.Printf("Received %s", line)
 	}
 
 `ExpectRegex` uses golang's internal regex engine to wait until a match from the process with the given regular expression (or an error on process termination with no match).
 
-	child := gexpect.Spawn("echo accb")	
+	child, _ := gexpect.Spawn("echo accb")	
 	match, _ := child.ExpectRegex("a..b")
 	// (match=true)
 
 `ExpectRegexFind` allows for groups to be extracted from process stdout. The first element is an array of containing the total matched text, followed by each subexpression group match.
 
-	child := gexpect.Spawn("echo 123 456 789")
+	child, _ := gexpect.Spawn("echo 123 456 789")
 	result, _ := child.ExpectRegexFind("\d+ (\d+) (\d+)")
 	// result = []string{"123 456 789", "456", "789"}
 
