@@ -188,6 +188,38 @@ func TestRegexFind(t *testing.T) {
 	}
 }
 
+// TestRegexFindFailure checks to ensure that when ExpectRegexFind()
+// fails, the returned error contains both the regex and the collected
+// output.
+func TestRegexFindFailure(t *testing.T) {
+	input := "hello world"
+	re := "this does not match"
+
+	child, err := Spawn("echo \"" + input + "\"")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	matches, err := child.ExpectRegexFind(re)
+	if err == nil {
+		t.Errorf("Expected error object")
+	}
+
+	if len(matches) > 0 {
+		t.Errorf("Expected no matches, got %v", matches)
+	}
+
+	s := err.Error()
+
+	if strings.Contains(s, re) == false {
+		t.Errorf("Expected error object to contain regex %q, got %v", re, s)
+	}
+
+	if strings.Contains(s, input) == false {
+		t.Errorf("Expected error object to contain input data %q, got %v", input, s)
+	}
+}
+
 func TestReadLine(t *testing.T) {
 	t.Logf("Testing ReadLine...")
 
