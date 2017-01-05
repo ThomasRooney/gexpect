@@ -213,7 +213,7 @@ func (expect *ExpectSubprocess) expectRegexFind(regex string, output bool) ([]st
 	// convert indexes to strings
 
 	if len(result) == 0 {
-		err = fmt.Errorf("ExpectRegex didn't find regex '%v'.", regex)
+		err = fmt.Errorf("ExpectRegex didn't find regex '%v'.\nOutput:\n%s", regex, stringIndexedInto)
 	} else {
 		// The number in pairs[1] is an index of a first
 		// character outside the whole match
@@ -387,7 +387,7 @@ func (expect *ExpectSubprocess) ReadUntil(delim byte) ([]byte, error) {
 		for i := 0; i < n; i++ {
 			if chunk[i] == delim {
 				if len(chunk) > i+1 {
-					expect.buf.PutBack(chunk[i+1:n])
+					expect.buf.PutBack(chunk[i+1 : n])
 				}
 				return join, nil
 			} else {
