@@ -347,6 +347,64 @@ func (expect *ExpectSubprocess) Expect(searchString string) (e error) {
 	}
 }
 
+func (expect *ExpectSubprocess) ExpectAny(searchStrings []string) (foundString string, e error) {
+	// Get number of elements
+	numElem := len(searchStrings)
+
+	// Find the longest string
+	// Create targets for each string
+	// Initialize vars
+	maxLen := 0
+	table := make([][]int, numElem)
+	target := make([]int, numElem)
+	m := make([]int, numElem)
+	i := make([]int, numElem)
+	offset := make([]int, numElem)
+	for elem, searchString := range searchStrings {
+		// Find longest
+		target[elem] = len(searchString)
+		if target[elem] > maxLen {
+			maxLen = target[elem]
+		}
+		// Create target
+		table[elem] = buildKMPTable(searchString)
+		// Initialize vars
+		m[elem] = 0
+		i[elem] = 0
+	}
+
+	// Make chunk depending on the lenght of the longest string
+	chunk := make([]byte, maxLen*2)
+
+	for {
+		// Read chunk, check for erros
+		n, err := expect.f.Read(chunk)
+		if err != nil {
+			return "", err
+		}
+
+		// Using same algorithm as normal Expect, only modified to work with an array of strings
+		for elem, searchString := range searchStrings {
+			offset[elem] = m[elem] + i[elem]
+			for m[elem]+i[elem]-offset[elem] < n {
+				if searchString[i[elem]] == chunk[m[elem]+i[elem]-offset[elem]] {
+					i[elem] += 1
+					if i[elem] == target[elem] {
+						return searchString, nil
+					}
+				} else {
+					m[elem] += i[elem] - table[elem][i[elem]]
+					if table[elem][i[elem]] > -1 {
+						i[elem] = table[elem][i[elem]]
+					} else {
+						i[elem] = 0
+					}
+				}
+			}
+		}
+	}
+}
+
 func (expect *ExpectSubprocess) Send(command string) error {
 	_, err := io.WriteString(expect.buf.f, command)
 	return err
