@@ -150,6 +150,9 @@ func (expect *ExpectSubprocess) Close() error {
 	if err := expect.Cmd.Process.Kill(); err != nil {
 		return err
 	}
+	if _, err := expect.Cmd.Process.Wait(); err != nil {
+		return err
+	}
 	if err := expect.buf.f.Close(); err != nil {
 		return err
 	}
@@ -387,7 +390,7 @@ func (expect *ExpectSubprocess) ReadUntil(delim byte) ([]byte, error) {
 		for i := 0; i < n; i++ {
 			if chunk[i] == delim {
 				if len(chunk) > i+1 {
-					expect.buf.PutBack(chunk[i+1:n])
+					expect.buf.PutBack(chunk[i+1 : n])
 				}
 				return join, nil
 			} else {
